@@ -73,10 +73,11 @@ T1_IN=T1 << write_shift
 T2_IN=T2 << write_shift
 T3_IN=T3 << write_shift
 
-DST_W =2 ** 10
-DST_R =2 ** 11
-SRC_W =2 ** 12
-SRC_R =2 ** 13
+#以DST与SRC控制器中值为控制指令，否则以ROM中值为控制指令
+DST_W =2 ** 10  #目的操作数寄存器写 DST_W=1时，直接将DST值送入控制器W端
+DST_R =2 ** 11  #目的操作数寄存器读 DST_R=1时，直接将DST值送入控制器R端
+SRC_W =2 ** 12  #原操作数寄存器写   SRC_W=1时，直接将SRC值送入控制器W端
+SRC_R =2 ** 13  #原操作数寄存器读   SRC_R=1时，直接将SRC值送入控制器R端
 
 #PC_CS=2 ** 14
 #PC_WE=2 ** 15
@@ -109,4 +110,7 @@ PCC_RD=2 ** 30
 
 HLT=2 ** 31
 
-
+AM_INS=0    #立即数寻址
+AM_REG=1    #寄存器寻址
+AM_DIR=2    #直接寻址
+AM_RAM=3    #间接寻址
