@@ -14,11 +14,20 @@ codes=[]    #存放编译后的机器码，格式为Code对象
 
 OP2={
     'MOV':ASM.MOV,  #10000000
+    'ADD':ASM.ADD,  #10010000
+    'SUB':ASM.SUB,  #10100000
+    'AND':ASM.AND,  #10110000
+    'OR':ASM.OR,    #11000000
+    'XOR':ASM.XOR,  #11010000
 }
 
-OP1={}
+OP1={
+    'INC':ASM.INC,  #01000000
+    'DEC':ASM.DEC,  #01000100
+    'NOT':ASM.NOT,  #01001000
+}
 OP0={
-    'NOP':ASM.NOP,  #00000000
+    'NOP':ASM.NOP,  #00000001
     'HLT':ASM.HLT,  #00111111
 }
 
@@ -74,7 +83,7 @@ class Code(object):
     
     def get_am(self,addr):  #获得操作数
         if not addr:
-            return 0,0
+            return None,None
         if addr in REGISTERS:
             return pin.AM_REG,REGISTERS[addr]   #寄存器寻址AM_REG=1
         if re.match(r'^[0-9]+$',addr):
@@ -99,10 +108,23 @@ class Code(object):
         op=self.get_op()
         amd,dst=self.get_am(self.dst)
         ams,src=self.get_am(self.src)
+        #print(amd,dst)
+        #print(ams,src)
+        #if src and (amd,ams) not in ASM.INSTRUCTIONS[2][op]:
+        #    raise SyntaxError(self)
+
         if op in OP2SET:
-            ir=op | (amd<<2) | ams
+            if amd is None or ams is None:
+                #print('err0')
+                raise SyntaxError(self)
+            else:
+                ir=op | (amd<<2) | ams
         elif op in OP1SET:
-            ir=op | amd
+            if amd is None:
+                #print('err1')
+                raise SyntaxError(self)
+            else:
+                ir=op | amd
         else:
             ir=op
 
@@ -141,10 +163,11 @@ def compile_program():
             for code in codes:
                 values=code.build_code()
                 for value in values:
+                    if value is None:
+                        continue
                     result= value.to_bytes(1,byteorder='little')
                     file.write(result)
                 
-
 
 def main():
     try:

@@ -8,10 +8,19 @@ FETCH=[pin.PC_OUT | pin.MAR_IN ,
         pin.MC_OUT | pin.SRC_IN | pin.PC_INC,
 ]
 
-MOV=0|(1<<7)
-ADD=(1<<4)|(1<<7)
-HLT=0x3f
-NOP=0
+MOV=0|(1<<7)    #10000000
+ADD=(1<<4)|(1<<7)       #10010000
+SUB=(2<<4)|(1<<7)       #10100000
+AND=(3<<4)|(1<<7)       #10110000
+OR=(4<<4)|(1<<7)        #11000000
+XOR=(5<<4)|(1<<7)       #11010000
+
+INC=0|(1<<6)    #01000000
+DEC=(1<<2)|(1<<6)       #01000100
+NOT=(2<<2)|(1<<6)       #01001000
+
+HLT=0x3f        #00111111
+NOP=1           #00000001
 
 INSTRUCTIONS={
         2:{
@@ -107,9 +116,126 @@ INSTRUCTIONS={
                                 pin.DST_R | pin.MAR_IN,
                                 pin.T1_OUT | pin.MC_IN
                         ],
-                }
+                },
+                ADD:{
+                        #10010100,94
+                        #ADD D 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值相加
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W
+                        ],
+                        #10010101,95
+                        #ADD D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值相加
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W
+                        ],
+                },
+                SUB:{
+                        #10100100,A4
+                        #SUB D 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值相减
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W
+                        ],
+                        #10100101,A5
+                        #SUB D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值相减
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W
+                        ],
+                },
+                AND:{
+                        #10110100,B4
+                        #AND B 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值位与
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_AND | pin.ALU_EN | pin.DST_W
+                        ],
+                        #10110101,B5
+                        #AND D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值位与
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_AND | pin.ALU_EN | pin.DST_W
+                        ],
+                },
+                OR:{
+                        #11000100,C4
+                        #OR B 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值位或
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_OR | pin.ALU_EN | pin.DST_W
+                        ],
+                        #11000101,C5
+                        #OR D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值位或
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_OR | pin.ALU_EN | pin.DST_W
+                        ],
+                },
+                XOR:{
+                        #11010100,D4
+                        #XOR B 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值位异或
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_XOR | pin.ALU_EN | pin.DST_W
+                        ],
+                        #11000101,D5
+                        #XOR D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值位异或
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_XOR | pin.ALU_EN | pin.DST_W
+                        ],
+                },
+
         },
-        1:{},
+        1:{
+                INC:{
+                        #01000001,41
+                        #INC B,寄存器中值加一
+                        pin.AM_REG:[
+                             pin.DST_R | pin.A_IN,
+                             pin.ALU_INC | pin.ALU_EN | pin.DST_W   
+                        ]
+                },
+                DEC:{
+                        #01000101,45
+                        #DEC B,寄存器中值减一
+                        pin.AM_REG:[
+                             pin.DST_R | pin.A_IN,
+                             pin.ALU_DEC | pin.ALU_EN | pin.DST_W   
+                        ]
+                },
+                NOT:{
+                        #01001000,48
+                        #NOT B,寄存器中值位取反
+                        pin.AM_REG:[
+                             pin.DST_R | pin.A_IN,
+                             pin.ALU_NOT | pin.ALU_EN | pin.DST_W   
+                        ]
+                },
+
+        },
         0:{
                 HLT:[
                         pin.HLT

@@ -15,21 +15,31 @@
 ;MOV [0x1E],[A];
 
 ;MOV [0x1F],[0x06];
-MOV A,0x1d;
+;MOV A,0x1d;
 
-MOV B,0x1e;
+;MOV B,0x1e;
 
-MOV C,0x1f;
+;MOV C,0x1f;
 
-MOV D,0x2f;
+;MOV D,0x2f;
 
-MOV [A],0xfc;
+;MOV [A],0xfc;
 
-MOV [B],C;
+;MOV [B],C;
 
-MOV [C],[0x03];
+;MOV [C],[0x03];
 
-MOV [D],[A];
+;MOV [D],[A];
 
+;MOV C,3;
+;ADD C,5;
+;NOP;
+;MOV D,15;
+;SUB D,C;
+;INC D;
+;DEC C;
+MOV C,0xa0;
+MOV D,0xaf;
+;AND C,D;
+NOT C;
 HLT;
-
