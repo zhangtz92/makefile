@@ -18,6 +18,7 @@ XOR=(5<<4)|(1<<7)       #11010000
 INC=0|(1<<6)    #01000000
 DEC=(1<<2)|(1<<6)       #01000100
 NOT=(2<<2)|(1<<6)       #01001000
+JMP=(3<<2)|(1<<6)       #01001100
 
 HLT=0x3f        #00111111
 NOP=1           #00000001
@@ -227,11 +228,18 @@ INSTRUCTIONS={
                         ]
                 },
                 NOT:{
-                        #01001000,48
+                        #01001001,49
                         #NOT B,寄存器中值位取反
                         pin.AM_REG:[
                              pin.DST_R | pin.A_IN,
                              pin.ALU_NOT | pin.ALU_EN | pin.DST_W   
+                        ]
+                },
+                JMP:{
+                        #01001100,4C
+                        #JMP flag,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
                         ]
                 },
 

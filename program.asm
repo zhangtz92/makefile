@@ -38,8 +38,16 @@
 ;SUB D,C;
 ;INC D;
 ;DEC C;
-MOV C,0xa0;
-MOV D,0xaf;
+;MOV C,0xa0;
+;MOV D,0xaf;
 ;AND C,D;
-NOT C;
+;NOT C;
+MOV C,5;
+MOV D,3;
+ADD C,D;
+
+INCEASE:
+    INC C;
+    JMP INCEASE
+
 HLT;

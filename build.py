@@ -11,6 +11,7 @@ outputfile=os.path.join(dirname,'program.bin')
 annotation=re.compile(r"(.*?);.*")  #正则：‘.’表示单字符，‘*’表示任意次，‘？’表示非贪婪，只匹配第一个分号
 
 codes=[]    #存放编译后的机器码，格式为Code对象
+marks={}
 
 OP2={
     'MOV':ASM.MOV,  #10000000
@@ -25,6 +26,7 @@ OP1={
     'INC':ASM.INC,  #01000000
     'DEC':ASM.DEC,  #01000100
     'NOT':ASM.NOT,  #01001000
+    'JMP':ASM.JMP,  #01001100
 }
 OP0={
     'NOP':ASM.NOP,  #00000001
@@ -54,20 +56,31 @@ class Code(object):
         self.op=None    #操作符
         self.dst=None   #目的操作数寄存器对应值
         self.src=None   #原操作数寄存器对应值
+        self.lable=None #转移指令标识符
+        self.byte=0     #指令占用的字节数
         self.prepare()  #内建函数，代码处理，将self.sou分为op,dst,src
 
     def prepare(self):  #内建函数，代码处理，将self.sou分为op,dst,src
+        if self.sou.endswith(':'):  #判断是否为转移指令标识
+            self.lable=self.sou.strip(':')
+            return
+            
         command=self.sou.split(',') #通过‘，’进行分隔
         if len(command)>2:  #出现两个以上逗号，代码错误
             raise SyntaxError(self)
         elif len(command)==2:   #一个逗号，为二地址指令
             self.src=command[1].strip() #逗号后的值，去掉多余空格后，为原操作数寄存器对应值
+            self.byte=3
         
         command=re.split(r" +",command[0])  #以空格对逗号前的值进行分割
         if len(command)>2:
             raise SyntaxError(self)
         elif len(command)==2:
             self.dst=command[1].strip()
+            if(self.byte!=3):
+               self.byte=2
+        else:
+            self.byte=1
         
         self.op=command[0].strip()
 
@@ -82,8 +95,11 @@ class Code(object):
             raise SyntaxError(self)
     
     def get_am(self,addr):  #获得操作数
+        global marks
         if not addr:
             return None,None
+        if addr in marks:
+            return pin.AM_INS,marks[addr]
         if addr in REGISTERS:
             return pin.AM_REG,REGISTERS[addr]   #寄存器寻址AM_REG=1
         if re.match(r'^[0-9]+$',addr):
@@ -141,6 +157,7 @@ class SyntaxError(Exception):
 
 
 def compile_program():
+    global marks
     with open(inputfile,encoding='utf8') as file:
         lines=file.readlines()
     for index,line in enumerate(lines):
@@ -156,17 +173,33 @@ def compile_program():
             pass
 
         code=Code(index+1,source)
-        codes.append(code)
         print(code)
+        codes.append(code)
 
-        with open(outputfile,'wb') as file:
-            for code in codes:
-                values=code.build_code()
-                for value in values:
-                    if value is None:
-                        continue
-                    result= value.to_bytes(1,byteorder='little')
-                    file.write(result)
+    #print(codes)
+
+    for var in range(len(codes)-1,-1,-1):
+        code_temp=codes[var]
+        #print(code_temp.byte)
+        if code_temp.lable:
+            jump_byte=0
+            for i in range(var):
+                jump_byte=jump_byte+codes[i].byte
+            marks[code_temp.lable]=jump_byte
+            del codes[var]
+    
+    #print(codes)
+    #print(marks)
+    #print(marks['INCEASE'])
+    
+    with open(outputfile,'wb') as file:
+        for code in codes:
+            values=code.build_code()
+            for value in values:
+                if value is None:
+                    continue
+                result= value.to_bytes(1,byteorder='little')
+                file.write(result)
                 
 
 def main():
