@@ -20,6 +20,7 @@ OP2={
     'AND':ASM.AND,  #10110000
     'OR':ASM.OR,    #11000000
     'XOR':ASM.XOR,  #11010000
+    'CMP':ASM.CMP,  #11100000
 }
 
 OP1={
@@ -27,6 +28,14 @@ OP1={
     'DEC':ASM.DEC,  #01000100
     'NOT':ASM.NOT,  #01001000
     'JMP':ASM.JMP,  #01001100
+    'JZ':ASM.JZ,    #01010000 零跳转
+    'JNZ':ASM.JNZ,  #01010100 非零跳转
+    'JC':ASM.JC,    #01011000 溢出跳转
+    'JNC':ASM.JNC,  #01011100 非溢出跳转
+    'JB':ASM.JB,    #01100000 负数跳转
+    'JNB':ASM.JNB,  #01100100 非负数跳转
+    'JP':ASM.JP,    #01101000 奇数跳转
+    'JNP':ASM.JNP,  #01101100 偶数跳转
 }
 OP0={
     'NOP':ASM.NOP,  #00000001
@@ -44,6 +53,7 @@ REGISTERS={
     'D':pin.D,
 
 }   #寄存器编号集合，这些值将会被写入DST与SRC中，通过DW,SW,DR,SR控制对应寄存器
+
 
 #print(OP2SET)
 #print(OP1SET)

@@ -14,11 +14,21 @@ SUB=(2<<4)|(1<<7)       #10100000
 AND=(3<<4)|(1<<7)       #10110000
 OR=(4<<4)|(1<<7)        #11000000
 XOR=(5<<4)|(1<<7)       #11010000
+CMP=(6<<4)|(1<<7)       #11100000
 
 INC=0|(1<<6)    #01000000
 DEC=(1<<2)|(1<<6)       #01000100
 NOT=(2<<2)|(1<<6)       #01001000
 JMP=(3<<2)|(1<<6)       #01001100
+JZ=(4<<2)|(1<<6)        #01010000 零跳转
+JNZ=(5<<2)|(1<<6)       #01010100 非零跳转
+JC=(6<<2)|(1<<6)        #01011000 溢出跳转
+JNC=(7<<2)|(1<<6)       #01011100 非溢出跳转
+JB=(8<<2)|(1<<6)        #01100000 负数跳转
+JNB=(9<<2)|(1<<6)       #01100100 非负数跳转
+JP=(10<<2)|(1<<6)       #01101000 奇数跳转
+JNP=(11<<2)|(1<<6)      #01101100 偶数跳转
+
 
 HLT=0x3f        #00111111
 NOP=1           #00000001
@@ -125,7 +135,7 @@ INSTRUCTIONS={
                         (pin.AM_REG,pin.AM_INS):[
                                 pin.DST_R | pin.A_IN,
                                 pin.SRC_OUT | pin.B_IN,
-                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W
+                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W | pin.ALU_PSW
                         ],
                         #10010101,95
                         #ADD D C,前面寄存器，后面寄存器
@@ -133,7 +143,7 @@ INSTRUCTIONS={
                         (pin.AM_REG,pin.AM_REG):[
                                 pin.DST_R | pin.A_IN,
                                 pin.SRC_R | pin.B_IN,
-                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W
+                                pin.ALU_ADD | pin.ALU_EN | pin.DST_W | pin.ALU_PSW
                         ],
                 },
                 SUB:{
@@ -143,7 +153,7 @@ INSTRUCTIONS={
                         (pin.AM_REG,pin.AM_INS):[
                                 pin.DST_R | pin.A_IN,
                                 pin.SRC_OUT | pin.B_IN,
-                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W
+                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W | pin.ALU_PSW
                         ],
                         #10100101,A5
                         #SUB D C,前面寄存器，后面寄存器
@@ -151,7 +161,7 @@ INSTRUCTIONS={
                         (pin.AM_REG,pin.AM_REG):[
                                 pin.DST_R | pin.A_IN,
                                 pin.SRC_R | pin.B_IN,
-                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W
+                                pin.ALU_SUB | pin.ALU_EN | pin.DST_W | pin.ALU_PSW
                         ],
                 },
                 AND:{
@@ -208,6 +218,24 @@ INSTRUCTIONS={
                                 pin.ALU_XOR | pin.ALU_EN | pin.DST_W
                         ],
                 },
+                CMP:{
+                        #11100100,E4
+                        #CMP D 5,前面寄存器，后面立即数
+                        #需要将原操作数寄存器SRC中值与目的操作寄存器DST中表示的寄存器中值比较，输出程序状态字
+                        (pin.AM_REG,pin.AM_INS):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_OUT | pin.B_IN,
+                                pin.ALU_SUB | pin.ALU_PSW
+                        ],
+                        #11100101,E5
+                        #CMP D C,前面寄存器，后面寄存器
+                        #需要将原操作数寄存器SRC中表示的寄存器中值与目的操作寄存器DST中表示的寄存器中值比较，输出程序状态字
+                        (pin.AM_REG,pin.AM_REG):[
+                                pin.DST_R | pin.A_IN,
+                                pin.SRC_R | pin.B_IN,
+                                pin.ALU_SUB | pin.ALU_PSW
+                        ],
+                },
 
         },
         1:{
@@ -216,7 +244,7 @@ INSTRUCTIONS={
                         #INC B,寄存器中值加一
                         pin.AM_REG:[
                              pin.DST_R | pin.A_IN,
-                             pin.ALU_INC | pin.ALU_EN | pin.DST_W   
+                             pin.ALU_INC | pin.ALU_EN | pin.DST_W | pin.ALU_PSW   
                         ]
                 },
                 DEC:{
@@ -224,7 +252,7 @@ INSTRUCTIONS={
                         #DEC B,寄存器中值减一
                         pin.AM_REG:[
                              pin.DST_R | pin.A_IN,
-                             pin.ALU_DEC | pin.ALU_EN | pin.DST_W   
+                             pin.ALU_DEC | pin.ALU_EN | pin.DST_W | pin.ALU_PSW  
                         ]
                 },
                 NOT:{
@@ -238,6 +266,62 @@ INSTRUCTIONS={
                 JMP:{
                         #01001100,4C
                         #JMP flag,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JZ:{
+                        #01010000,50
+                        #JZ flag,psw零跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JNZ:{
+                        #01010100,54
+                        #JNZ flag,psw非零跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JC:{
+                        #01011000,58
+                        #JC flag,psw溢出跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JNC:{
+                        #01011100,5C
+                        #JNC flag,psw非溢出跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JB:{
+                        #01100000,60
+                        #JB flag,psw借位跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JNB:{
+                        #01100100,64
+                        #JNB flag,psw非借位跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JP:{
+                        #01101000,68
+                        #JP flag,psw奇数跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        pin.AM_INS:[
+                             pin.DST_OUT | pin.PC_RD
+                        ]
+                },
+                JNP:{
+                        #01101100,6C
+                        #JNP flag,psw偶数跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
                              pin.DST_OUT | pin.PC_RD
                         ]

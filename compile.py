@@ -5,7 +5,32 @@ import assembly as ASM
 dirname=os.path.dirname(__file__)
 filename=os.path.join(dirname,'cpu.bin')
 
+CJMPS=[ASM.JZ,ASM.JNZ,ASM.JC,ASM.JNC,ASM.JB,ASM.JNB,ASM.JP,ASM.JNP]
+
 micro=[pin.HLT for _ in range(0x10000)]
+
+def compile_cjmp(exe,psw,op):
+    overflow=psw & 0x01
+    negitive=psw & 0x02
+    not_zero=psw & 0x04
+    parity=psw & 0x08
+    if op is ASM.JZ and not not_zero:
+        return exe
+    if op is ASM.JNZ and not_zero:
+        return exe
+    if op is ASM.JC and overflow:
+        return exe
+    if op is ASM.JNC and not overflow:
+        return exe
+    if op is ASM.JB and negitive:
+        return exe
+    if op is ASM.JNB and not negitive:
+        return exe
+    if op is ASM.JP and parity:
+        return exe
+    if op is ASM.JNP and not parity:
+        return exe
+    return [pin.PCC_RD]  #程序计数器清零，重新开始
 
 def compile_addr2(addr,ir,psw,index):
     global micro
@@ -43,6 +68,8 @@ def compile_addr1(addr,ir,psw,index):
         return
     #print('ok3')
     EXE=INST[op][amd]
+    if op in CJMPS:
+        EXE=compile_cjmp(EXE,psw,op)
     if index < len(EXE):
         micro[addr-2]=EXE[index]
         #print('ok')
@@ -64,7 +91,7 @@ def compile_addr0(addr,ir,psw,index):
 
 for addr in range(0x10000):
     ir=addr>>8
-    psw=(addr>>8) & 0x0f
+    psw=(addr>>4) & 0x0f
     cyc=addr & 0x0f
 
     if cyc < len(ASM.FETCH):

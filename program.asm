@@ -46,8 +46,15 @@ MOV C,5;
 MOV D,3;
 ADD C,D;
 
-INCEASE:
+increase:
     INC C;
-    JMP INCEASE
+    CMP C,15;
+    JB increase;
+    JNB decrease;
+
+decrease:
+    DEC C;
+    JZ increase;
+    JNZ decrease;
 
 HLT;
