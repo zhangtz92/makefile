@@ -28,6 +28,8 @@ JB=(8<<2)|(1<<6)        #01100000 负数跳转
 JNB=(9<<2)|(1<<6)       #01100100 非负数跳转
 JP=(10<<2)|(1<<6)       #01101000 奇数跳转
 JNP=(11<<2)|(1<<6)      #01101100 偶数跳转
+PUSH=(12<<2)|(1<<6)     #01110000 入栈
+POP=(13<<2)|(1<<6)      #01110100 出栈
 
 
 HLT=0x3f        #00111111
@@ -325,6 +327,40 @@ INSTRUCTIONS={
                         pin.AM_INS:[
                              pin.DST_OUT | pin.PC_RD
                         ]
+                },
+                PUSH:{
+                        #01110000,70
+                        #PUSH 0x10,入栈，将10H写入SS：SP表示的栈中,SP指针减一指向栈顶
+                        pin.AM_INS:[
+                             pin.SP_OUT | pin.A_IN,
+                             pin.ALU_DEC | pin.ALU_EN | pin.SP_IN,
+                             pin.SP_OUT | pin.MAR_IN, 
+                             pin.SS_OUT | pin.MSR_IN,
+                             pin.DST_OUT | pin.MC_IN,
+                             pin.CS_OUT | pin.MSR_IN,
+                        ],
+                        #01110001,71
+                        #PUSH C,入栈，将寄存器C中内容写入SS：SP表示的栈中,SP指针减一指向栈顶
+                        pin.AM_REG:[
+                             pin.SP_OUT | pin.A_IN,
+                             pin.ALU_DEC | pin.ALU_EN | pin.SP_IN,
+                             pin.SP_OUT | pin.MAR_IN, 
+                             pin.SS_OUT | pin.MSR_IN,
+                             pin.DST_R | pin.MC_IN,
+                             pin.CS_OUT | pin.MSR_IN,
+                        ],
+                },
+                POP:{
+                        #01110101,75
+                        #POP C,出栈，将栈顶SS：SP中内容写入目的操作数寄存器表示的寄存器中,SP指针加一指向栈顶
+                        pin.AM_REG:[
+                             pin.SP_OUT | pin.MAR_IN,
+                             pin.SS_OUT | pin.MSR_IN,
+                             pin.DST_W | pin.MC_OUT,
+                             pin.SP_OUT | pin.A_IN,
+                             pin.ALU_INC | pin.ALU_EN | pin.SP_IN,
+                             pin.CS_OUT | pin.MSR_IN,
+                        ],
                 },
 
         },

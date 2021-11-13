@@ -36,6 +36,9 @@ OP1={
     'JNB':ASM.JNB,  #01100100 非负数跳转
     'JP':ASM.JP,    #01101000 奇数跳转
     'JNP':ASM.JNP,  #01101100 偶数跳转
+    'PUSH':ASM.PUSH,    #01110000 入栈
+    'POP':ASM.POP,      #01110100 出栈
+
 }
 OP0={
     'NOP':ASM.NOP,  #00000001
@@ -51,6 +54,13 @@ REGISTERS={
     'B':pin.B,
     'C':pin.C,
     'D':pin.D,
+    'CS':pin.CS,
+    'BP':pin.BP,
+    'SS':pin.SS,
+    'SP':pin.SP,
+    'T1':pin.T1,
+    'T2':pin.T2,
+    'T3':pin.T3,
 
 }   #寄存器编号集合，这些值将会被写入DST与SRC中，通过DW,SW,DR,SR控制对应寄存器
 
