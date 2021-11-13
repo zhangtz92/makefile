@@ -30,10 +30,12 @@ JP=(10<<2)|(1<<6)       #01101000 奇数跳转
 JNP=(11<<2)|(1<<6)      #01101100 偶数跳转
 PUSH=(12<<2)|(1<<6)     #01110000 入栈
 POP=(13<<2)|(1<<6)      #01110100 出栈
+CALL=(14<<2)|(1<<6)     #01111000 函数调用
 
 
 HLT=0x3f        #00111111
 NOP=1           #00000001
+RET=0x02        #00000010 函数返回，return
 
 INSTRUCTIONS={
         2:{
@@ -269,63 +271,72 @@ INSTRUCTIONS={
                         #01001100,4C
                         #JMP flag,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JZ:{
                         #01010000,50
                         #JZ flag,psw零跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JNZ:{
                         #01010100,54
                         #JNZ flag,psw非零跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JC:{
                         #01011000,58
                         #JC flag,psw溢出跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JNC:{
                         #01011100,5C
                         #JNC flag,psw非溢出跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JB:{
                         #01100000,60
                         #JB flag,psw借位跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JNB:{
                         #01100100,64
                         #JNB flag,psw非借位跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JP:{
                         #01101000,68
                         #JP flag,psw奇数跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 JNP:{
                         #01101100,6C
                         #JNP flag,psw偶数跳转,跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
                         pin.AM_INS:[
-                             pin.DST_OUT | pin.PC_RD
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
                         ]
                 },
                 PUSH:{
@@ -362,6 +373,21 @@ INSTRUCTIONS={
                              pin.CS_OUT | pin.MSR_IN,
                         ],
                 },
+                CALL:{
+                        #01111000,78
+                        #CALL flag,调用flag函数，跳转至flag下一行代码对应的内存地址，flag为立即数，表示跳转地址
+                        #并将当前内存地址入栈，函数返回时可继续执行
+                        pin.AM_INS:[
+                             pin.SP_OUT | pin.A_IN,
+                             pin.ALU_DEC | pin.ALU_EN | pin.SP_IN,
+                             pin.SP_OUT | pin.MAR_IN, 
+                             pin.SS_OUT | pin.MSR_IN,
+                             pin.PC_OUT | pin.MC_IN,
+                             pin.DST_OUT | pin.PC_RD,
+                             pin.DST_OUT,
+                             pin.CS_OUT | pin.MSR_IN,
+                        ],
+                },
 
         },
         0:{
@@ -370,8 +396,19 @@ INSTRUCTIONS={
                 ],
                 NOP:[
                         pin.PCC_RD
-                ]
-
+                ],
+                RET:
+                #00000010,02
+                #函数返回，将函数调用时压入栈的返回地址取出，送入指令计数器中
+                [
+                        pin.SP_OUT | pin.MAR_IN,
+                        pin.SS_OUT | pin.MSR_IN,
+                        pin.SP_OUT | pin.A_IN,
+                        pin.ALU_INC | pin.ALU_EN | pin.SP_IN,
+                        pin.PC_RD | pin.MC_OUT,
+                        pin.MC_OUT,
+                        pin.CS_OUT | pin.MSR_IN,
+                ],
         }
 }
 #print(MOV)

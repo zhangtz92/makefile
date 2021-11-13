@@ -38,11 +38,13 @@ OP1={
     'JNP':ASM.JNP,  #01101100 偶数跳转
     'PUSH':ASM.PUSH,    #01110000 入栈
     'POP':ASM.POP,      #01110100 出栈
+    'CALL':ASM.CALL,    #01111000 函数调用
 
 }
 OP0={
     'NOP':ASM.NOP,  #00000001
     'HLT':ASM.HLT,  #00111111
+    'RET':ASM.RET,  #00000010 函数返回
 }
 
 OP2SET=set(OP2.values())    #OP2中各元素值组成的集合{ASM.MOV,ASM.ADD...}
